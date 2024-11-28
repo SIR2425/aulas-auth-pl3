@@ -4,9 +4,20 @@ require('dotenv').config();
 const express = require('express');
 const cookieParser = require('cookie-parser');
 
+const rateLimit = require('express-rate-limit'); // middleware to limit login attempts
+const helmet = require('helmet'); // middleware to secure http headers
+
 const app = express();
 app.use(express.urlencoded({extended: true}));
 app.use(cookieParser());
+app.use(helmet());
+
+// rate limiter middleware
+const limiter = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1 minutes
+    max: 5, // limit each IP to 5 requests per windowMs
+    message: 'Too many requests from this IP, please try again later.'
+});
 
 const port = process.env.PORT || 3000;
 
@@ -18,10 +29,10 @@ const users = {
 const loggedUsers = new Set();
 
 app.get('/', (req, res) => {
-    res.send('Hello, PL1!');
+    res.send('Hello, PL3!');
 });
 
-app.post('/login', (req, res) => {
+app.post('/login', limiter, (req, res) => {
     const username = req.body.username;
     const password = req.body.password;
     // const { username, password } = req.body;
